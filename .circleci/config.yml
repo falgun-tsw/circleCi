@@ -111,6 +111,8 @@ jobs:
       - image: cimg/node:20.17.0
     steps:
       - checkout
+      - node/install-packages:
+          pkg-manager: npm
       - run: 
           name: Install aws cli
           command: |
