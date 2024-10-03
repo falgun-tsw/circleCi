@@ -105,6 +105,7 @@ jobs:
       - run:
           name: Build app
           command: npm run build 
+
   deploy:
     docker: 
       - image: cimg/node:20.17.0
@@ -116,7 +117,8 @@ jobs:
             sudo apt-get update
             sudo apt-get install -y awscli
       - aws-s3/sync:
-          from: bucket
+          from: build
           to: 's3://$S3_BUCKET'
           arguments: 
-            --acl public-read 
+            --acl public-read
+            --region $AWS_REGION  
