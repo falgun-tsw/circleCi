@@ -116,5 +116,7 @@ jobs:
           command: |
             sudo apt-get update
             sudo apt-get install -y awscli
-         command: |
+      - run:
+          name: Deploy to S3
+          command: |
             aws s3 sync build s3://$S3_BUCKET --acl public-read --region $AWS_REGION
