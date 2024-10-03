@@ -54,7 +54,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace:
-          at: /workspace
+          at: /project
       - run:
           name: Install AWS CLI
           command: |
