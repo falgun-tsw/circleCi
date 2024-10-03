@@ -26,52 +26,92 @@
 #       - build_and_test
 
 
+# version: 2.1
+# orbs:
+#   node: circleci/node@6.1.0
+#   aws-s3: circleci/aws-s3@4.0.0
+# jobs:
+#   build_and_test:
+#     executor: node/default
+#     steps:
+#       - checkout
+#       - node/install-packages:
+#           pkg-manager: npm
+#       - run:
+#           name: Run tests
+#           command: npm run test -- --watchAll=false
+#       - run:
+#           name: Build app
+#           command: npm run build
+#       - persist_to_workspace:
+#           root: .
+#           paths:
+#             - build
+
+#   deploy:
+#     docker:
+#       - image: cimg/python:3.12.6  # Can be any image; we're using this for AWS CLI
+#     steps:
+#       - checkout
+#       - attach_workspace:
+#           at: .
+#       - run:
+#           name: Install AWS CLI
+#           command: |
+#             sudo apt-get update
+#             sudo apt-get install -y python3-pip
+#             pip3 install awscli
+#       - run:
+#           name: Deploy to S3
+#           command: |
+#             aws s3 sync /app/build s3://$S3_BUCKET --delete
+#             aws s3 cp s3://$S3_BUCKET/index.html s3://$S3_BUCKET/ --metadata-directive REPLACE --content-type text/html
+
+# workflows:
+#   version: 2
+#   build_and_deploy:
+#     jobs:
+#       - build_and_test
+#       - deploy:
+#           requires:
+#             - build_and_test
+
+
 version: 2.1
+
 orbs:
-  node: circleci/node@6.1.0
-  aws-s3: circleci/aws-s3@4.0.0
-jobs:
-  build_and_test:
-    executor: node/default
+  aws-s3: circleci/aws-s3@4.0.0 
+
+workflows: 
+  build-deploy: 
+    jobs:
+      - build_app
+      - deploy:
+          requires:
+            - build_app
+          filters:
+            branches:
+              only: main 
+
+jobs: 
+  build_app:
+    docker: 
+      - image: cimg/node:20.17.0
     steps:
       - checkout
       - node/install-packages:
           pkg-manager: npm
       - run:
-          name: Run tests
-          command: npm run test -- --watchAll=false
-      - run:
           name: Build app
-          command: npm run build
-      - persist_to_workspace:
-          root: ~/project
-          paths:
-            - build
-
+          command: npm run build 
   deploy:
-    docker:
-      - image: circleci/python:3.12.6  # Can be any image; we're using this for AWS CLI
+    docker: 
+      - image: cimg/node:20.17.0
     steps:
       - checkout
-      - attach_workspace:
-          at: .
-      - run:
-          name: Install AWS CLI
-          command: |
-            sudo apt-get update
-            sudo apt-get install -y python3-pip
-            pip3 install awscli
-      - run:
-          name: Deploy to S3
-          command: |
-            aws s3 sync /workspace/build s3://$S3_BUCKET --delete
-            aws s3 cp s3://$S3_BUCKET/index.html s3://$S3_BUCKET/ --metadata-directive REPLACE --content-type text/html
-
-workflows:
-  version: 2
-  build_and_deploy:
-    jobs:
-      - build_and_test
-      - deploy:
-          requires:
-            - build_and_test
+      - aws-s3/sync:
+          from: bucket
+          to: 's3://$S3_BUCKET'
+          arguments: | 
+            --acl public-read \
+            --cache-control "max-age=86400"
