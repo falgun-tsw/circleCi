@@ -28,7 +28,7 @@
 
 version: 2.1
 orbs:
-  node: circleci/node@5.0.2
+  node: circleci/node@6.1.0
   aws-s3: circleci/aws-s3@4.0.0
 jobs:
   build_and_test:
@@ -50,11 +50,11 @@ jobs:
 
   deploy:
     docker:
-      - image: circleci/python:3.8  # Can be any image; we're using this for AWS CLI
+      - image: circleci/python:3.12.6  # Can be any image; we're using this for AWS CLI
     steps:
       - checkout
       - attach_workspace:
-          at: /project
+          at: .
       - run:
           name: Install AWS CLI
           command: |
